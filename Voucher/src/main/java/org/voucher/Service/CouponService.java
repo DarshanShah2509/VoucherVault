@@ -51,7 +51,15 @@ public class CouponService {
     }
 
     public Coupon updateCoupon(String id, Coupon coupon) {
-        coupon.setId(id);
+        Optional<Coupon> existing = couponRepository.findById(id);
+        if (existing.isPresent()) {
+            coupon.setId(id);
+            coupon.setCreationDate(existing.get().getCreationDate());
+            coupon.setExpirationDate(existing.get().getExpirationDate());
+            coupon.setActive(existing.get().isActive());
+        } else {
+            throw new RuntimeException("Coupon not found");
+        }
         return couponRepository.save(coupon);
     }
 
@@ -93,7 +101,7 @@ public class CouponService {
             case CART_WISE -> {
                 double cartTotal = (double) cart.get("totalPrice");
                 Map<String, Object> cartDetails = coupon.getDetails();
-                yield cartTotal > (double) cartDetails.get("threshold");
+                yield cartTotal > (int) cartDetails.get("threshold");
             }
             case PRODUCT_WISE -> {
                 List<Map<String, Object>> items = (List<Map<String, Object>>) cart.get("items");
@@ -115,25 +123,26 @@ public class CouponService {
     }
 
     private Map<String, Object> applyCartWiseDiscount(Map<String, Object> cart, Coupon coupon) {
+        HashMap<String, Object> res = new HashMap<>(cart);
         double cartTotal = (double) cart.get("totalPrice");
         Map<String, Object> details = coupon.getDetails();
-        double discount = (double) details.get("discount");
+        double discount = (int) details.get("discount");
         double discountAmount = cartTotal * (discount / 100);
 
-        cart.put("totalDiscount", discountAmount);
-        cart.put("finalPrice", cartTotal - discountAmount);
-        return cart;
+        res.put("totalDiscount", discountAmount);
+        res.put("finalPrice", cartTotal - discountAmount);
+        return res;
     }
 
     private Map<String, Object> applyProductWiseDiscount(Map<String, Object> cart, Coupon coupon) {
         List<Map<String, Object>> items = (List<Map<String, Object>>) cart.get("items");
         Map<String, Object> details = coupon.getDetails();
         int productId = (int) details.get("product_id");
-        double discount = (double) details.get("discount");
+        double discount = (int) details.get("discount");
 
         items.forEach(item -> {
             if (item.get("product_id").equals(productId)) {
-                double price = (double) item.get("price");
+                double price = (int) item.get("price");
                 double discountAmount = price * (discount / 100);
                 item.put("total_discount", discountAmount);
             }
