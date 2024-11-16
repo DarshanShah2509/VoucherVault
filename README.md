@@ -69,3 +69,5 @@ Modify the cron expression in CouponExpirationScheduler.java if you want to adju
 - Time-Based Coupons: Support coupons valid during specific hours (e.g., happy hour discounts).
 - Geo-Location Based Coupons: Add support for location-based coupon restrictions.
 
+## Postman Collection
+[VoucherVault.postman_collection.json](https://github.com/user-attachments/files/17784597/VoucherVault.postman_collection.json)
